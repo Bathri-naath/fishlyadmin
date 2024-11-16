@@ -13,7 +13,7 @@ const LoginDetails: React.FC = () => {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
+    // setLoading(true);
 
     const formData = new FormData();
     formData.append("mobile", username);
@@ -33,12 +33,15 @@ const LoginDetails: React.FC = () => {
       sessionStorage.setItem("uid", response.data.id);
       sessionStorage.setItem("token", response.data.token);
 
+      console.log(response.data.id)
+
       // localStorage.setItem("token", response.data.token);
       navigate("/admin/dashboard");
+
     } catch (error) {
       setError("Invalid username number or password");
     } finally {
-      setLoading(false); // Set loading to false after the request completes
+      // setLoading(false); // Set loading to false after the request completes
     }
   };
 
@@ -87,7 +90,7 @@ const Login: React.FC = () => {
   const navigate = useNavigate();
 
   const handleLogoClick = () => {
-    navigate("/"); // Navigate to the Home page when the logo is clicked
+    navigate("/admin/dashboard"); // Navigate to the Home page when the logo is clicked
   };
 
   return (

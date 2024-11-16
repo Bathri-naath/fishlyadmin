@@ -9,7 +9,7 @@ import Admin from "./components/Admin"; // Import Admin component
 import Login from "./components/Login"; // Import Login component
 
 const App: React.FC = () => {
-  const isLoggedIn = localStorage.getItem("isLoggedIn"); // Check if the user is logged in
+  const isLoggedIn = sessionStorage.getItem("uid"); // Check if the user is logged in
 
   useEffect(() => {
     // If not logged in, redirect to login page
