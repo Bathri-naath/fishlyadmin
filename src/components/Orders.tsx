@@ -1,59 +1,96 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import axios from "axios";
 
-const Orders: React.FC = () => {
-  // State to manage the search input
-  const [searchTerm, setSearchTerm] = useState("");
+interface Order {
+  _id: string;
+  order: string; // E.g., "Onsite cut (Date: 2024-11-24, Time: 07:30)"
+  cuttingMethod: string;
+  cost: string;
+  status: string;
+  paymentMethod: string;
+  transaction_id: string;
+  customer_id: string;
+}
 
-  // Example order data (replace with actual data from the backend if needed)
-  const orders = [
-    {
-      id: 1,
-      name: "John Doe",
-      phone: "123-456-7890",
-      address: "123 Main St, Springfield",
-      orderItems: "2x Salmon, 1x Tuna",
-      cuttingMethod: "Pre-cut",
-      date: "2024-11-15",
-      time: "10:30 AM",
-      paymentMethod: "Cash on Delivery",
-      cost: "$45.00",
-      status: "Delivered",
-    },
-    {
-      id: 2,
-      name: "Jane Smith",
-      phone: "987-654-3210",
-      address: "456 Elm St, Gotham City",
-      orderItems: "1x Catla, 3x Prawns",
-      cuttingMethod: "On-site Cutting",
-      date: "2024-11-14",
-      time: "2:15 PM",
-      paymentMethod: "Pay Online",
-      cost: "$78.50",
-      status: "In Transit",
-    },
-    {
-      id: 3,
-      name: "Alice Johnson",
-      phone: "555-555-5555",
-      address: "789 Pine St, Metropolis",
-      orderItems: "5x Mackerel",
-      cuttingMethod: "Whole Fish",
-      date: "2024-11-13",
-      time: "5:45 PM",
-      paymentMethod: "Pay Online",
-      cost: "$60.00",
-      status: "Pending",
-    },
-  ];
+interface User {
+  _id: string;
+  username: string;
+  address: string;
+  mobile: string;
+  orders: Order[];
+}
 
-  // Extract the first name from the user's full name
-  const getFirstName = (name: string) => name.split(" ")[0].toLowerCase();
+const UserOrdersPage: React.FC = () => {
+  const [usersData, setUsersData] = useState<User[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState<string>("");
 
-  // Filter orders based on the first name search term
-  const filteredOrders = orders.filter((order) =>
-    getFirstName(order.name).includes(searchTerm.toLowerCase())
+  const token = sessionStorage.getItem("token");
+
+  useEffect(() => {
+    const fetchUsersWithOrders = async () => {
+      try {
+        const response = await axios.post(
+          "https://api.fishly.co.in/getAllCustomersWithOrders",{},
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+        if (response.status !== 200) {
+          throw new Error("Failed to fetch users data");
+        }
+         const usersWithOrders = response.data.filter(
+           (user: User) => user.orders && user.orders.length > 0
+         );
+        setUsersData(usersWithOrders);
+      } catch (err) {
+        setError("Error fetching users data: " + err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUsersWithOrders();
+  }, []);
+
+  if (loading) {
+    return <div>Loading...</div>;
+  }
+
+  if (error) {
+    return <div>{error}</div>;
+  }
+
+  if (!usersData.length) {
+    return <div>No users data available</div>;
+  }
+
+  // Filter users based on search term
+  const filteredUsers = usersData.filter((user) =>
+    user.username.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  // Sorting function for orders
+  const sortOrders = (orders: Order[]) => {
+    const extractDateTime = (order: string) => {
+      const regex = /Date: (\d{4}-\d{2}-\d{2}), Time: (\d{2}:\d{2})/;
+      const match = order.match(regex);
+      if (match) {
+        const [_, date, time] = match;
+        return new Date(`${date}T${time}:00`).getTime();
+      }
+      return 0;
+    };
+
+    return [...orders].sort((a, b) => {
+      const timeA = extractDateTime(a.order);
+      const timeB = extractDateTime(b.order);
+      return timeB - timeA; // Descending order
+    });
+  };
 
   return (
     <div className="p-6">
@@ -66,58 +103,78 @@ const Orders: React.FC = () => {
       {/* Search Box */}
       <input
         type="text"
-        placeholder="Search by user's first name..."
+        placeholder="Search by user's name..."
         value={searchTerm}
         onChange={(e) => setSearchTerm(e.target.value)}
         className="w-full p-2 mb-4 border border-gray-300 rounded-lg"
       />
 
-      {/* Orders List */}
+      {/* Users and Orders List */}
       <div className="space-y-4">
-        {filteredOrders.length > 0 ? (
-          filteredOrders.map((order) => (
+        {filteredUsers.length > 0 ? (
+          filteredUsers.map((user) => (
             <div
-              key={order.id}
-              className="p-4 border border-gray-300 rounded-lg shadow-sm flex justify-between"
+              key={user._id}
+              className="border border-gray-300 p-4 rounded-lg shadow-sm"
             >
-              {/* Left Section */}
-              <div>
-                <h2 className="text-lg font-medium">User Name: {order.name}</h2>
-                <p>Phone Number: {order.phone}</p>
-                <p>Address: {order.address}</p>
-                <p>Order Items: {order.orderItems}</p>
-                <p>Payment Method: {order.paymentMethod}</p>
-                <p>Cost: {order.cost}</p>
-                <p className="font-bold">
-                  Order Status:{" "}
-                  <span
-                    className={
-                      order.status === "Delivered"
-                        ? "text-green-600"
-                        : order.status === "In Transit"
-                        ? "text-yellow-600"
-                        : "text-red-600"
-                    }
-                  >
-                    {order.status}
-                  </span>
-                </p>
+              {/* User Details */}
+              <div className="mb-4">
+                <h2 className="text-lg font-medium">Name: {user.username}</h2>
+                <p>Phone Number: {user.mobile}</p>
+                <p>Address: {user.address || "Address not provided"}</p>
               </div>
 
-              {/* Right Section */}
-              <div className="text-right">
-                <p>Cutting Method: {order.cuttingMethod}</p>
-                <p>Date: {order.date}</p>
-                <p>Time: {order.time}</p>
+              {/* Orders for the User */}
+              <div className="space-y-2">
+                {user.orders.length > 0 ? (
+                  sortOrders(user.orders).map((order) => (
+                    <div
+                      key={order._id}
+                      className="p-4 border border-gray-200 rounded-lg"
+                    >
+                      <p>
+                        <strong>Order ID:</strong> {order._id}
+                      </p>
+                      <p>
+                        <strong>Product:</strong> {order.order}
+                      </p>
+                      <p>
+                        <strong>Cutting Method:</strong> {order.cuttingMethod}
+                      </p>
+                      <p>
+                        <strong>Price:</strong> ₹{order.cost}
+                      </p>
+                      <p>
+                        <strong>Status:</strong>{" "}
+                        <span
+                          className={
+                            order.status === "Delivered"
+                              ? "text-green-600"
+                              : order.status === "In Transit"
+                              ? "text-yellow-600"
+                              : "text-red-600"
+                          }
+                        >
+                          {order.status}
+                        </span>
+                      </p>
+                      <p>
+                        <strong>Payment Method:</strong> {order.paymentMethod}
+                      </p>
+                    </div>
+                  ))
+                ) : (
+                  <p>No orders found for this user.</p>
+                )}
               </div>
             </div>
           ))
         ) : (
-          <p>No orders found.</p>
+          <p>No users found matching the search term.</p>
         )}
       </div>
     </div>
   );
 };
 
-export default Orders;
+export default UserOrdersPage;

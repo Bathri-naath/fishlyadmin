@@ -1,7 +1,7 @@
 import { Link, Route, Routes } from "react-router-dom"; // Import necessary routing components
 import logo from "../assets/logo.png"; // Import the logo
 import Dashboard from "./Dashboard"; // Import the Dashboard component
-import Orders from "./Orders"; // Import the Orders component
+import UserOrdersPage from "./Orders"; // Import the Orders component
 import UserDetails from "./UserDetails"; // Import the UserDetails component
 
 const Admin: React.FC = () => {
@@ -46,7 +46,7 @@ const Admin: React.FC = () => {
         <Routes>
           {/* Define the admin section pages */}
           <Route path="dashboard" element={<Dashboard />} />
-          <Route path="orders" element={<Orders />} />
+          <Route path="orders" element={<UserOrdersPage />} />
           <Route path="user-details" element={<UserDetails />} />
         </Routes>
       </div>
