@@ -1,6 +1,7 @@
 // src/components/Login.tsx
+import logo from "../assets/logo.png";
 import React, { useState } from "react";
-import { useDispatch} from "react-redux";
+import { useDispatch } from "react-redux";
 import { login } from "../store";
 import axios from "axios";
 
@@ -36,13 +37,12 @@ const LoginDetails: React.FC = () => {
       sessionStorage.setItem("uid", response.data.id);
       sessionStorage.setItem("token", response.data.token);
       // sessionStorage.setItem("loggedIn", "true");
-      dispatch(login({token: response.data.token, uid: response.data.uid}));
+      dispatch(login({ token: response.data.token, uid: response.data.uid }));
 
-      console.log(response.data.id)
+      console.log(response.data.id);
 
       // localStorage.setItem("token", response.data.token);
       navigate("/admin/dashboard");
-
     } catch (error) {
       setError("Invalid username number or password");
     } finally {
@@ -102,7 +102,7 @@ const Login: React.FC = () => {
     <div className="flex flex-col justify-center items-center h-screen bg-gray-100">
       <div className="absolute top-6">
         <img
-          src="src\assets\logo.png" // Adjust the logo path accordingly
+          src={logo} // Adjust the logo path accordingly
           alt="Logo"
           className="h-16 w-auto cursor-pointer"
           onClick={handleLogoClick} // Handle click event to navigate to Home
