@@ -34,7 +34,7 @@ const App: React.FC = () => {
       <Route path="/login" element={<Login />} />
       <Route
         path="/admin/*"
-        element={isLoggedIn ? <Admin /> : <Navigate to="/login" />}
+        element={<Admin />}
       >
         {/* Admin-specific pages */}
         <Route path="dashboard" element={<Dashboard />} />

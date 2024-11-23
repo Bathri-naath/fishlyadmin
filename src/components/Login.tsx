@@ -1,6 +1,6 @@
 // src/components/Login.tsx
 import React, { useState } from "react";
-import { useDispatch, UseDispatch } from "react-redux";
+import { useDispatch} from "react-redux";
 import { login } from "../store";
 import axios from "axios";
 
@@ -16,7 +16,7 @@ const LoginDetails: React.FC = () => {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    // setLoading(true);
+    setLoading(true);
 
     const formData = new FormData();
     formData.append("mobile", username);

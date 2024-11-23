@@ -65,6 +65,8 @@ const UserOrdersPage: React.FC = () => {
       const formData = new FormData();
       formData.append("status", status);
 
+      console.log(orderStatus);
+
       try {
 
         console.log(orderId)
@@ -78,7 +80,7 @@ const UserOrdersPage: React.FC = () => {
           }
 
         );
-        alert("status Updated Successfully")
+        alert(response.data)
         window.location.reload()
       } catch (error) {
         console.log(error);
