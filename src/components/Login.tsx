@@ -1,10 +1,13 @@
 // src/components/Login.tsx
 import React, { useState } from "react";
+import { useDispatch, UseDispatch } from "react-redux";
+import { login } from "../store";
 import axios from "axios";
 
 import { useNavigate } from "react-router-dom"; // Import useNavigate for navigation
 
 const LoginDetails: React.FC = () => {
+  const dispatch = useDispatch();
   const [username, setusername] = useState<string>("");
   const [password, setPassword] = useState<string>("");
   const [error, setError] = useState<string | null>(null);
@@ -32,6 +35,8 @@ const LoginDetails: React.FC = () => {
 
       sessionStorage.setItem("uid", response.data.id);
       sessionStorage.setItem("token", response.data.token);
+      // sessionStorage.setItem("loggedIn", "true");
+      dispatch(login({token: response.data.token, uid: response.data.uid}));
 
       console.log(response.data.id)
 
@@ -90,7 +95,7 @@ const Login: React.FC = () => {
   const navigate = useNavigate();
 
   const handleLogoClick = () => {
-    navigate("/admin/dashboard"); // Navigate to the Home page when the logo is clicked
+    navigate("/dashboard"); // Navigate to the Home page when the logo is clicked
   };
 
   return (

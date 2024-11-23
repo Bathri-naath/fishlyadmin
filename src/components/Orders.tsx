@@ -25,36 +25,65 @@ const UserOrdersPage: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState<string>("");
+  const [orderStatus, setOrderStatus] = useState<string>("");
+
+ 
 
   const token = sessionStorage.getItem("token");
 
   useEffect(() => {
-    const fetchUsersWithOrders = async () => {
+    fetchUsersWithOrders();
+  }, []);
+
+  const fetchUsersWithOrders = async () => {
+    try {
+      const response = await axios.post(
+        "https://api.fishly.co.in/getAllCustomersWithOrders",
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      if (response.status !== 200) {
+        throw new Error("Failed to fetch users data");
+      }
+      const usersWithOrders = response.data.filter(
+        (user: User) => user.orders && user.orders.length > 0
+      );
+      setUsersData(usersWithOrders);
+    } catch (err) {
+      setError("Error fetching users data: " + err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const postOrder = async(orderId:string, status:string) => {
+
+      const formData = new FormData();
+      formData.append("status", status);
+
       try {
+
+        console.log(orderId)
         const response = await axios.post(
-          "https://api.fishly.co.in/getAllCustomersWithOrders",{},
+          `https://api.fishly.co.in/updateStatusOrder/${orderId}`,
+          formData,
           {
             headers: {
               Authorization: `Bearer ${token}`,
             },
           }
-        );
-        if (response.status !== 200) {
-          throw new Error("Failed to fetch users data");
-        }
-         const usersWithOrders = response.data.filter(
-           (user: User) => user.orders && user.orders.length > 0
-         );
-        setUsersData(usersWithOrders);
-      } catch (err) {
-        setError("Error fetching users data: " + err);
-      } finally {
-        setLoading(false);
-      }
-    };
 
-    fetchUsersWithOrders();
-  }, []);
+        );
+        alert("status Updated Successfully")
+        window.location.reload()
+      } catch (error) {
+        console.log(error);
+      }
+    }
 
   if (loading) {
     return <div>Loading...</div>;
@@ -151,8 +180,8 @@ const UserOrdersPage: React.FC = () => {
                             order.status === "Delivered"
                               ? "text-green-600"
                               : order.status === "In Transit"
-                              ? "text-yellow-600"
-                              : "text-red-600"
+                              ? "text-orange-600" : order.status === "Preparing" ?
+                              "text-yellow-600" : "text-red-600" 
                           }
                         >
                           {order.status}
@@ -161,6 +190,28 @@ const UserOrdersPage: React.FC = () => {
                       <p>
                         <strong>Payment Method:</strong> {order.paymentMethod}
                       </p>
+                      <div className="flex items-center justify-start space-x-4">
+                        <p>
+                          <strong>Update Order Status :</strong>
+                        </p>
+                        <p className="underline text-yellow-600 cursor-pointer " onClick={()=> {setOrderStatus("Preparing");
+                          postOrder(order._id, "Preparing")
+                        }}>
+                          Preparing
+                        </p>
+                        <p className="underline text-orange-600 cursor-pointer" onClick={()=> {
+                          setOrderStatus("In-Transit");
+                          postOrder(order._id, "In-Transit");
+                        }}>
+                          In-Transit
+                        </p>
+                        <p className="cursor-pointer underline text-green-600" onClick={()=> {
+                          setOrderStatus("Delivered");
+                          postOrder(order._id, "Delivered");
+                        }}>
+                          Delivered
+                        </p>
+                      </div>
                     </div>
                   ))
                 ) : (

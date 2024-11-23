@@ -26,8 +26,6 @@ const Dashboard: React.FC = () => {
             }
           }
       )
-
-      console.log(result.data)
       setUsers(result.data[0].customer)
 
     }

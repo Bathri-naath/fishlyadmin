@@ -1,36 +1,47 @@
 import React, { useEffect } from "react";
-import {
-  BrowserRouter as Router,
-  Routes,
-  Route,
-  Navigate,
-} from "react-router-dom"; // Use Navigate for redirects
-import Admin from "./components/Admin"; // Import Admin component
-import Login from "./components/Login"; // Import Login component
+import { Routes, Route, Navigate } from "react-router-dom";
+import { useSelector, useDispatch } from "react-redux";
+import { RootState } from "./store";
+import { login } from "./store";
+import Login from "./components/Login";
+// import { Dispatch } from "react";
+import Dashboard from "./components/Dashboard";
+import UserDetails from "./components/UserDetails";
+import UserOrdersPage from "./components/Orders";
+import Admin from "./components/Admin";
 
 const App: React.FC = () => {
-  const isLoggedIn = sessionStorage.getItem("uid"); // Check if the user is logged in
+  const dispatch = useDispatch()
+  const { isLoggedIn } = useSelector((state: RootState) => state.auth);
 
   useEffect(() => {
-    // If not logged in, redirect to login page
-    if (!isLoggedIn && window.location.pathname !== "/login") {
-      window.location.href = "/login";
+    // Check if the token is present in sessionStorage to auto-login
+    const token = sessionStorage.getItem("token");
+    const uid = sessionStorage.getItem("uid");
+    if (token && uid) {
+      dispatch(login({ token, uid }));
     }
-  }, [isLoggedIn]);
+  }, [dispatch]);
 
   return (
-    <Router future={{ v7_relativeSplatPath: true }}>
-      <Routes>
-        {/* Route for login */}
-        <Route path="/login" element={<Login />} />
-
-        {/* Route for Admin page */}
-        <Route
-          path="/admin/*"
-          element={isLoggedIn ? <Admin /> : <Navigate to="/login" />}
-        />
-      </Routes>
-    </Router>
+    <Routes>
+      <Route
+        path="/"
+        element={
+          isLoggedIn ? <Navigate to="/admin/dashboard" /> : <Navigate to="/login" />
+        }
+      />
+      <Route path="/login" element={<Login />} />
+      <Route
+        path="/admin/*"
+        element={isLoggedIn ? <Admin /> : <Navigate to="/login" />}
+      >
+        {/* Admin-specific pages */}
+        <Route path="dashboard" element={<Dashboard />} />
+        <Route path="orders" element={<UserOrdersPage />} />
+        <Route path="user-details" element={<UserDetails />} />
+      </Route>
+    </Routes>
   );
 };
 
