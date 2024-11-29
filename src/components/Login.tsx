@@ -21,7 +21,7 @@ const LoginDetails: React.FC = () => {
 
     const formData = new FormData();
     formData.append("mobile", username);
-    formData.append("password", password);
+    formData.append("username", password);
 
     try {
       const response = await axios.post(
@@ -34,8 +34,8 @@ const LoginDetails: React.FC = () => {
         }
       );
 
-      sessionStorage.setItem("uid", response.data.id);
-      sessionStorage.setItem("token", response.data.token);
+      localStorage.setItem("uid", response.data.id);
+      localStorage.setItem("token", response.data.token);
       // sessionStorage.setItem("loggedIn", "true");
       dispatch(login({ token: response.data.token, uid: response.data.uid }));
 
@@ -56,16 +56,16 @@ const LoginDetails: React.FC = () => {
       <form onSubmit={handleLogin} className="w-full">
         <input
           type="text"
-          placeholder="Mobile Number"
-          value={username}
-          onChange={(e) => setusername(e.target.value)}
+          placeholder="Username"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
           className="mb-6 p-3 border border-gray-300 rounded w-full"
         />
         <input
-          type="password"
-          placeholder="Password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
+          type="text"
+          placeholder="Mobile Number"
+          value={username}
+          onChange={(e) => setusername(e.target.value)}
           className="mb-6 p-3 border border-gray-300 rounded w-full"
         />
 

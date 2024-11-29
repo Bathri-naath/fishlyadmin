@@ -27,9 +27,7 @@ const UserOrdersPage: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [orderStatus, setOrderStatus] = useState<string>("");
 
- 
-
-  const token = sessionStorage.getItem("token");
+  const token = localStorage.getItem("token");
 
   useEffect(() => {
     fetchUsersWithOrders();
@@ -60,32 +58,29 @@ const UserOrdersPage: React.FC = () => {
     }
   };
 
-  const postOrder = async(orderId:string, status:string) => {
+  const postOrder = async (orderId: string, status: string) => {
+    const formData = new FormData();
+    formData.append("status", status);
 
-      const formData = new FormData();
-      formData.append("status", status);
+    console.log(orderStatus);
 
-      console.log(orderStatus);
-
-      try {
-
-        console.log(orderId)
-        const response = await axios.post(
-          `https://api.fishly.co.in/updateStatusOrder/${orderId}`,
-          formData,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-
-        );
-        alert(response.data)
-        window.location.reload()
-      } catch (error) {
-        console.log(error);
-      }
+    try {
+      console.log(orderId);
+      const response = await axios.post(
+        `https://api.fishly.co.in/updateStatusOrder/${orderId}`,
+        formData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      alert(response.data);
+      window.location.reload();
+    } catch (error) {
+      console.log(error);
     }
+  };
 
   if (loading) {
     return <div>Loading...</div>;
@@ -182,8 +177,10 @@ const UserOrdersPage: React.FC = () => {
                             order.status === "Delivered"
                               ? "text-green-600"
                               : order.status === "In Transit"
-                              ? "text-orange-600" : order.status === "Preparing" ?
-                              "text-yellow-600" : "text-red-600" 
+                              ? "text-orange-600"
+                              : order.status === "Preparing"
+                              ? "text-yellow-600"
+                              : "text-red-600"
                           }
                         >
                           {order.status}
@@ -196,21 +193,31 @@ const UserOrdersPage: React.FC = () => {
                         <p>
                           <strong>Update Order Status :</strong>
                         </p>
-                        <p className="underline text-yellow-600 cursor-pointer " onClick={()=> {setOrderStatus("Preparing");
-                          postOrder(order._id, "Preparing")
-                        }}>
+                        <p
+                          className="underline text-yellow-600 cursor-pointer "
+                          onClick={() => {
+                            setOrderStatus("Preparing");
+                            postOrder(order._id, "Preparing");
+                          }}
+                        >
                           Preparing
                         </p>
-                        <p className="underline text-orange-600 cursor-pointer" onClick={()=> {
-                          setOrderStatus("In-Transit");
-                          postOrder(order._id, "In-Transit");
-                        }}>
+                        <p
+                          className="underline text-orange-600 cursor-pointer"
+                          onClick={() => {
+                            setOrderStatus("In-Transit");
+                            postOrder(order._id, "In-Transit");
+                          }}
+                        >
                           In-Transit
                         </p>
-                        <p className="cursor-pointer underline text-green-600" onClick={()=> {
-                          setOrderStatus("Delivered");
-                          postOrder(order._id, "Delivered");
-                        }}>
+                        <p
+                          className="cursor-pointer underline text-green-600"
+                          onClick={() => {
+                            setOrderStatus("Delivered");
+                            postOrder(order._id, "Delivered");
+                          }}
+                        >
                           Delivered
                         </p>
                       </div>

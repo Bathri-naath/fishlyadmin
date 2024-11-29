@@ -8,35 +8,32 @@ interface User {
   mobile: string;
 }
 
-
 const Dashboard: React.FC = () => {
   // State to manage the search input
   const [searchTerm, setSearchTerm] = useState("");
 
-  const token = sessionStorage.getItem("token")
-  const [users, setUsers] = useState<User[]|null>();
+  const token = localStorage.getItem("token");
+  const [users, setUsers] = useState<User[] | null>();
 
-  useEffect(()=>{
-    const fetchData = async() => {
-      try{
-        const result = await axios.get("https://api.fishly.co.in/getAllCustomers",
-          { 
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const result = await axios.get(
+          "https://api.fishly.co.in/getAllCustomers",
+          {
             headers: {
               Authorization: `Bearer ${token}`, // Add the token in the Authorization header
-            }
+            },
           }
-      )
-      setUsers(result.data[0].customer)
-
-    }
-    catch (error){
-      console.log(error)
-    }
+        );
+        setUsers(result.data[0].customer);
+      } catch (error) {
+        console.log(error);
+      }
     };
 
     fetchData();
-
-  },[])
+  }, []);
 
   // Example user data (you can replace this with actual data from the backend)
   // const users = [
@@ -77,7 +74,9 @@ const Dashboard: React.FC = () => {
               key={user._id}
               className="p-4 border border-gray-300 rounded-lg shadow-sm"
             >
-              <h2 className="text-lg font-medium">User Name: {user.username}</h2>
+              <h2 className="text-lg font-medium">
+                User Name: {user.username}
+              </h2>
               <p>Phone Number: {user.mobile}</p>
             </div>
           ))
