@@ -20,7 +20,9 @@ const Admin: React.FC = () => {
 
         {/* Sidebar Links */}
         <div>
-          <p className="text-2xl font-semibold mb-4 flex items-center justify-center">Welcome Admin</p>
+          <p className="text-2xl font-semibold mb-4 flex items-center justify-center">
+            Welcome Admin
+          </p>
           <div className="space-y-4">
             <Link
               to="/admin/dashboard"

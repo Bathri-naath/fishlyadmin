@@ -3,7 +3,7 @@ import axios from "axios";
 
 interface Order {
   _id: string;
-  order: string; // E.g., "Onsite cut (Date: 2024-11-24, Time: 07:30)"
+  order: string;
   cuttingMethod: string;
   cost: string;
   status: string;
@@ -25,8 +25,9 @@ const UserOrdersPage: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState<string>("");
-  const [orderStatus, setOrderStatus] = useState<string>("");
+  const [currentPage, setCurrentPage] = useState<number>(1);
 
+  const USERS_PER_PAGE = 5;
   const token = localStorage.getItem("token");
 
   useEffect(() => {
@@ -62,10 +63,7 @@ const UserOrdersPage: React.FC = () => {
     const formData = new FormData();
     formData.append("status", status);
 
-    console.log(orderStatus);
-
     try {
-      console.log(orderId);
       const response = await axios.post(
         `https://api.fishly.co.in/updateStatusOrder/${orderId}`,
         formData,
@@ -76,10 +74,60 @@ const UserOrdersPage: React.FC = () => {
         }
       );
       alert(response.data);
-      window.location.reload();
+      fetchUsersWithOrders(); // Refresh data without reloading
     } catch (error) {
       console.log(error);
     }
+  };
+
+  // Function to parse the cutting method date
+  const parseCuttingDate = (cuttingMethod: string) => {
+    const [, details] = cuttingMethod.split(" (");
+    const [datePart] = details
+      ? details
+          .replace(")", "")
+          .split(", ")
+          .map((str) => str.split(": ")[1])
+      : ["N/A"];
+
+    const truncatedDatePart = datePart
+      ? datePart.split(" ").slice(0, 4).join(" ")
+      : "N/A";
+
+    return truncatedDatePart;
+  };
+
+  // Function to parse the cutting method time
+  const parseCuttingTime = (cuttingMethod: string) => {
+    const [, details] = cuttingMethod.split(" (");
+    const [datePart] = details
+      ? details
+          .replace(")", "")
+          .split(", ")
+          .map((str) => str.split(": ")[1])
+      : ["N/A"];
+
+    const timeFromDate = datePart
+      ? datePart.split(" ").slice(4).join(" ")
+      : "N/A";
+
+    const truncatedTimePart = timeFromDate.split(" ")[0] || "N/A";
+
+    return truncatedTimePart;
+  };
+
+  // Usage in your component
+  const parseCuttingMethod = (cuttingMethod: string) => {
+    const method = cuttingMethod.split(" (")[0];
+    const date = parseCuttingDate(cuttingMethod);
+    const time = parseCuttingTime(cuttingMethod);
+
+    return { method, date, time };
+  };
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    window.scrollTo(0, 0); // Scroll to top when page changes
   };
 
   if (loading) {
@@ -94,29 +142,35 @@ const UserOrdersPage: React.FC = () => {
     return <div>No users data available</div>;
   }
 
-  // Filter users based on search term
-  const filteredUsers = usersData.filter((user) =>
-    user.username.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // Function to filter users based on the search term (matching the date in the cutting method)
+  const filteredUsers = usersData.filter((user) => {
+    return user.orders.some((order) => {
+      const { date } = parseCuttingMethod(order.cuttingMethod);
+      return date.toLowerCase().includes(searchTerm.toLowerCase());
+    });
+  });
 
-  // Sorting function for orders
   const sortOrders = (orders: Order[]) => {
-    const extractDateTime = (order: string) => {
+    const extractOrderDateTime = (order: string) => {
       const regex = /Date: (\d{4}-\d{2}-\d{2}), Time: (\d{2}:\d{2})/;
       const match = order.match(regex);
-      if (match) {
-        const [_, date, time] = match;
-        return new Date(`${date}T${time}:00`).getTime();
-      }
-      return 0;
+      return match ? new Date(`${match[1]}T${match[2]}:00`).getTime() : 0;
     };
 
     return [...orders].sort((a, b) => {
-      const timeA = extractDateTime(a.order);
-      const timeB = extractDateTime(b.order);
-      return timeB - timeA; // Descending order
+      const timeA = extractOrderDateTime(a.order);
+      const timeB = extractOrderDateTime(b.order);
+      return timeB - timeA;
     });
   };
+
+  const totalUsers = filteredUsers.length;
+  const totalPages = Math.ceil(totalUsers / USERS_PER_PAGE);
+
+  const paginatedUsers = filteredUsers.slice(
+    (currentPage - 1) * USERS_PER_PAGE,
+    currentPage * USERS_PER_PAGE
+  );
 
   return (
     <div className="p-6">
@@ -126,112 +180,136 @@ const UserOrdersPage: React.FC = () => {
         placed on the website.
       </p>
 
-      {/* Search Box */}
       <input
         type="text"
-        placeholder="Search by user's name..."
+        placeholder="Search by order date..."
         value={searchTerm}
         onChange={(e) => setSearchTerm(e.target.value)}
         className="w-full p-2 mb-4 border border-gray-300 rounded-lg"
       />
 
-      {/* Users and Orders List */}
       <div className="space-y-4">
-        {filteredUsers.length > 0 ? (
-          filteredUsers.map((user) => (
+        {paginatedUsers.length > 0 ? (
+          paginatedUsers.map((user) => (
             <div
               key={user._id}
               className="border border-gray-300 p-4 rounded-lg shadow-sm"
             >
-              {/* User Details */}
               <div className="mb-4">
                 <h2 className="text-lg font-medium">Name: {user.username}</h2>
                 <p>Phone Number: {user.mobile}</p>
                 <p>Address: {user.address || "Address not provided"}</p>
               </div>
 
-              {/* Orders for the User */}
               <div className="space-y-2">
                 {user.orders.length > 0 ? (
-                  sortOrders(user.orders).map((order) => (
-                    <div
-                      key={order._id}
-                      className="p-4 border border-gray-200 rounded-lg"
-                    >
-                      <p>
-                        <strong>Order ID:</strong> {order._id}
-                      </p>
-                      <p>
-                        <strong>Product:</strong> {order.order}
-                      </p>
-                      <p>
-                        <strong>Cutting Method:</strong> {order.cuttingMethod}
-                      </p>
-                      <p>
-                        <strong>Price:</strong> ₹{order.cost}
-                      </p>
-                      <p>
-                        <strong>Status:</strong>{" "}
-                        <span
-                          className={
-                            order.status === "Delivered"
-                              ? "text-green-600"
-                              : order.status === "In Transit"
-                              ? "text-orange-600"
-                              : order.status === "Preparing"
-                              ? "text-yellow-600"
-                              : "text-red-600"
-                          }
-                        >
-                          {order.status}
-                        </span>
-                      </p>
-                      <p>
-                        <strong>Payment Method:</strong> {order.paymentMethod}
-                      </p>
-                      <div className="flex items-center justify-start space-x-4">
-                        <p>
-                          <strong>Update Order Status :</strong>
-                        </p>
-                        <p
-                          className="underline text-yellow-600 cursor-pointer "
-                          onClick={() => {
-                            setOrderStatus("Preparing");
-                            postOrder(order._id, "Preparing");
-                          }}
-                        >
-                          Preparing
-                        </p>
-                        <p
-                          className="underline text-orange-600 cursor-pointer"
-                          onClick={() => {
-                            setOrderStatus("In-Transit");
-                            postOrder(order._id, "In-Transit");
-                          }}
-                        >
-                          In-Transit
-                        </p>
-                        <p
-                          className="cursor-pointer underline text-green-600"
-                          onClick={() => {
-                            setOrderStatus("Delivered");
-                            postOrder(order._id, "Delivered");
-                          }}
-                        >
-                          Delivered
-                        </p>
+                  sortOrders(user.orders).map((order) => {
+                    const { method, date, time } = parseCuttingMethod(
+                      order.cuttingMethod
+                    );
+                    return (
+                      <div
+                        key={order._id}
+                        className="p-4 border border-gray-200 rounded-lg"
+                      >
+                        <div className="flex flex-col sm:flex-row justify-between items-center space-y-2 sm:space-y-0 sm:space-x-4">
+                          <div className="flex-1">
+                            <p>
+                              <strong>Order ID:</strong> {order._id}
+                            </p>
+                            <p>
+                              <strong>Product:</strong> {order.order}
+                            </p>
+                            <p>
+                              <strong>Cutting Method:</strong> {method}
+                            </p>
+                            <p>
+                              <strong>Status:</strong>{" "}
+                              <span
+                                className={
+                                  order.status === "Delivered"
+                                    ? "text-green-600"
+                                    : order.status === "In Transit"
+                                    ? "text-orange-600"
+                                    : order.status === "Preparing"
+                                    ? "text-yellow-600"
+                                    : "text-red-600"
+                                }
+                              >
+                                {order.status}
+                              </span>
+                            </p>
+                            <p>
+                              <strong>Payment Method:</strong>{" "}
+                              {order.paymentMethod}
+                            </p>
+                          </div>
+                          <div className="text-right flex-1">
+                            <p>
+                              <strong>Date:</strong> {date}
+                            </p>
+                            <p>
+                              <strong>Time:</strong> {time}
+                            </p>
+                            <p>
+                              <strong>Price:</strong> ₹{order.cost}
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="flex flex-wrap items-center justify-start space-x-4">
+                          <p>
+                            <strong>Update Order Status:</strong>
+                          </p>
+                          <p
+                            className="underline text-yellow-600 cursor-pointer"
+                            onClick={() => postOrder(order._id, "Preparing")}
+                          >
+                            Preparing
+                          </p>
+                          <p
+                            className="underline text-orange-600 cursor-pointer"
+                            onClick={() => postOrder(order._id, "In-Transit")}
+                          >
+                            In Transit
+                          </p>
+                          <p
+                            className="underline text-green-600 cursor-pointer"
+                            onClick={() => postOrder(order._id, "Delivered")}
+                          >
+                            Delivered
+                          </p>
+                        </div>
                       </div>
-                    </div>
-                  ))
+                    );
+                  })
                 ) : (
-                  <p>No orders found for this user.</p>
+                  <div>No orders available</div>
                 )}
               </div>
             </div>
           ))
         ) : (
-          <p>No users found matching the search term.</p>
+          <div>No matching users found.</div>
         )}
+      </div>
+
+      <div className="mt-6">
+        <div className="flex justify-center space-x-4">
+          {Array.from({ length: totalPages }, (_, index) => (
+            <button
+              key={index + 1}
+              onClick={() => handlePageChange(index + 1)}
+              className={`px-4 py-2 border rounded-md ${
+                currentPage === index + 1
+                  ? "bg-teal-500 text-white"
+                  : "bg-white text-teal-500"
+              }`}
+            >
+              {index + 1}
+            </button>
+          ))}
+        </div>
       </div>
     </div>
   );
