@@ -1,55 +1,65 @@
-import React, { useEffect } from 'react'
+import React, { useEffect, useState } from "react";
 import { FaBalanceScale, FaUtensils, FaTrash } from "react-icons/fa";
 import { BiDish } from "react-icons/bi";
-import axios from 'axios';
-import { useState } from 'react';
+import axios from "axios";
+import ProductManager from "./ProductForm";
 
- interface Product {
-   _id: string; // Ensure the type matches your product structure
-   name: string;
-   price: number;
-   image: string;
-   weight: string;
-   pieces: string;
-   servings: string;
-   description: string;
-   macros: string;
-   gravy: string;
-   fry: string;
-   barbeque: string;
- }
-
+interface Product {
+  _id: string;
+  name: string;
+  price: number;
+  image: string;
+  weight: string;
+  pieces: string;
+  servings: string;
+  description: string;
+  macros: string;
+  gravy: string;
+  fry: string;
+  barbeque: string;
+}
 
 const Products = () => {
+  const [, setLoading] = useState<boolean>(true);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [showForm, setShowForm] = useState(false);
+  const [currentProduct, setCurrentProduct] = useState<Partial<Product>>({});
 
-    const [, setLoading] = useState<boolean>(true);
-    const [products, setProducts] = useState<Product[]>([]);
+ const fetchData = async () => {
+   try {
+     const response = await axios.get("https://api.fishly.co.in/getAll");
+     setProducts(response.data);
+   } catch (error) {
+     console.error("Error fetching data:", error);
+   } finally {
+     setLoading(false); // Stop loading when data is fetched
+   }
+ };
 
-    useEffect(() => {
-      const fetchData = async () => {
-        try {
-          const response = await axios.get("https://api.fishly.co.in/getAll");
+  useEffect(() => {
+   
+    fetchData();
+  }, []);
 
-          setProducts(response.data);
-        } catch (error) {
-          console.error("Error fetching data:", error);
-        } finally {
-          setLoading(false); // Stop loading when data is fetched
-        }
-      };
-      fetchData();
-    }, []);
+  const handleUpdate = (product: Product) => {
+    setCurrentProduct(product);
+    setShowForm(true);
+  };
 
-    const handleUpdate = () => {
-        console.log("update Workign")
-    }
+  const handleDelete = (_id: string) => {
+    console.log("Deleted", _id);
+  };
 
-    const handleDelete = () => {
-      console.log("Deleted Workign");
-    };
-    const handleAddProduct = () => {
-      console.log("add Workign");
-    };
+  const handleAddProduct = () => {
+    setCurrentProduct({});
+    setShowForm(true);
+  };
+
+  const handleProductUpdateOrAdd = () => {
+    fetchData(); // Refresh product list
+    setShowForm(false); // Close the form
+  };
+
 
   return (
     <div className="my-8 relative">
@@ -84,7 +94,7 @@ const Products = () => {
                   <div className="flex items-right space-x-4">
                     <button
                       className="flex items-center bg-white text-black font-bold rounded-md px-4 py-2"
-                      onClick={handleUpdate}
+                      onClick={() => handleUpdate(product)}
                     >
                       Update
                     </button>
@@ -92,7 +102,7 @@ const Products = () => {
                       className="text-red-600 font-bold text-xl"
                       onClick={(e) => {
                         e.stopPropagation();
-                        handleDelete();
+                        handleDelete(product._id);
                       }}
                     >
                       <FaTrash />
@@ -118,8 +128,19 @@ const Products = () => {
           <span className="text-gray-500 text-4xl">+</span>
         </div>
       </div>
+
+      {/* ProductManager form popup */}
+      {showForm && (
+        <ProductManager
+          product={currentProduct}
+          setShowForm={setShowForm}
+          setProducts={setProducts}
+          products={products}
+          handleProductUpdateOrAdd={handleProductUpdateOrAdd}
+        />
+      )}
     </div>
   );
-}
+};
 
-export default Products
+export default Products;
