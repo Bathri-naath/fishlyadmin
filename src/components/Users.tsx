@@ -9,12 +9,13 @@ interface User {
 }
 
 const Dashboard: React.FC = () => {
-  // State to manage the search input
-  const [searchTerm, setSearchTerm] = useState("");
-
+  const [searchTerm, setSearchTerm] = useState(""); // State to manage search term
   const token = localStorage.getItem("token");
-  const [users, setUsers] = useState<User[] | null>();
+  const [users, setUsers] = useState<User[] | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [usersPerPage] = useState(10);
 
+  // Fetch data on component mount
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -22,7 +23,7 @@ const Dashboard: React.FC = () => {
           "https://api.fishly.co.in/getAllCustomers",
           {
             headers: {
-              Authorization: `Bearer ${token}`, // Add the token in the Authorization header
+              Authorization: `Bearer ${token}`,
             },
           }
         );
@@ -33,21 +34,23 @@ const Dashboard: React.FC = () => {
     };
 
     fetchData();
-  }, []);
+  }, [token]);
 
-  // Example user data (you can replace this with actual data from the backend)
-  // const users = [
-  //   { id: 1, name: "John Doe", phone: "123-456-7890" },
-  //   { id: 2, name: "Jane Smith", phone: "987-654-3210" },
-  //   { id: 3, name: "Alice Johnson", phone: "555-555-5555" },
-  // ];
-
+  // Get the first name of the user for filtering
   const getFirstName = (name: string) => name.split(" ")[0].toLowerCase();
 
-  // Filter users based on the search term
+  // Filter users based on search term
   const filteredUsers = users?.filter((user) =>
     getFirstName(user.username).includes(searchTerm.toLowerCase())
   );
+
+  // Logic for pagination
+  const indexOfLastUser = currentPage * usersPerPage;
+  const indexOfFirstUser = indexOfLastUser - usersPerPage;
+  const currentUsers = filteredUsers?.slice(indexOfFirstUser, indexOfLastUser);
+
+  // Change page
+  const paginate = (pageNumber: number) => setCurrentPage(pageNumber);
 
   return (
     <div className="p-6">
@@ -67,9 +70,9 @@ const Dashboard: React.FC = () => {
       />
 
       {/* User List */}
-      <div className="space-y-4">
-        {filteredUsers && filteredUsers.length > 0 ? (
-          filteredUsers.map((user) => (
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-4">
+        {currentUsers && currentUsers.length > 0 ? (
+          currentUsers.map((user) => (
             <div
               key={user._id}
               className="p-4 border border-gray-300 rounded-lg shadow-sm"
@@ -82,6 +85,30 @@ const Dashboard: React.FC = () => {
           ))
         ) : (
           <p>No users found.</p>
+        )}
+      </div>
+
+      {/* Pagination Controls */}
+      <div className="flex justify-center mt-6">
+        {filteredUsers && filteredUsers.length > 0 && (
+          <div className="flex space-x-2">
+            {Array.from(
+              { length: Math.ceil(filteredUsers.length / usersPerPage) },
+              (_, index) => (
+                <button
+                  key={index + 1}
+                  onClick={() => paginate(index + 1)}
+                  className={`px-4 py-2 border rounded-md ${
+                    currentPage === index + 1
+                      ? "bg-teal-500 text-white"
+                      : "bg-white text-teal-500"
+                  }`}
+                >
+                  {index + 1}
+                </button>
+              )
+            )}
+          </div>
         )}
       </div>
     </div>
