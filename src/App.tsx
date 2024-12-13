@@ -17,8 +17,8 @@ const App: React.FC = () => {
 
   useEffect(() => {
     // Check if the token is present in sessionStorage to auto-login
-    const token = sessionStorage.getItem("token");
-    const uid = sessionStorage.getItem("uid");
+    const token = localStorage.getItem("token");
+    const uid = localStorage.getItem("uid");
     if (token && uid) {
       dispatch(login({ token, uid }));
     }

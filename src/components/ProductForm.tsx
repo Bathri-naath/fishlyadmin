@@ -19,16 +19,12 @@ interface Product {
 interface ProductManagerProps {
   product: Partial<Product>;
   setShowForm: React.Dispatch<React.SetStateAction<boolean>>;
-  setProducts: React.Dispatch<React.SetStateAction<Product[]>>;
-  products: Product[];
   handleProductUpdateOrAdd: () => void;
 }
 
 const ProductManager: React.FC<ProductManagerProps> = ({
   product,
   setShowForm,
-  setProducts,
-  products,
   handleProductUpdateOrAdd,
 }) => {
   const [productData, setProductData] = useState<Product>({
@@ -98,7 +94,7 @@ const ProductManager: React.FC<ProductManagerProps> = ({
     try {
       if (product._id) {
         // Update product
-        const response = await axios.put(
+        const response = await axios.post(
           `https://api.fishly.co.in/updateProduct/${product._id}`,
           form,
           {

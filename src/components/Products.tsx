@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { FaBalanceScale, FaUtensils, FaTrash } from "react-icons/fa";
 import { BiDish } from "react-icons/bi";
 import axios from "axios";
@@ -25,6 +25,8 @@ const Products = () => {
   const [showForm, setShowForm] = useState(false);
   const [currentProduct, setCurrentProduct] = useState<Partial<Product>>({});
 
+  const token = localStorage.getItem("token");
+
  const fetchData = async () => {
    try {
      const response = await axios.get("https://api.fishly.co.in/getAll");
@@ -46,8 +48,22 @@ const Products = () => {
     setShowForm(true);
   };
 
-  const handleDelete = (_id: string) => {
+  const handleDelete = async (_id: string) => {
     console.log("Deleted", _id);
+    try {
+      const response = await axios.get(`https://api.fishly.co.in/deleteProduct/${_id}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        }
+      )
+
+      console.log(response);
+      fetchData();
+    } catch (error) {
+      console.error(error)
+    }
   };
 
   const handleAddProduct = () => {
@@ -134,8 +150,6 @@ const Products = () => {
         <ProductManager
           product={currentProduct}
           setShowForm={setShowForm}
-          setProducts={setProducts}
-          products={products}
           handleProductUpdateOrAdd={handleProductUpdateOrAdd}
         />
       )}
