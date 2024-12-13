@@ -20,7 +20,9 @@ const Admin: React.FC = () => {
 
         {/* Sidebar Links */}
         <div>
-          <p className="text-2xl font-semibold mb-4 flex items-center justify-center">Welcome Admin</p>
+          <p className="text-2xl font-semibold mb-4 flex items-center justify-center">
+            Welcome Admin
+          </p>
           <div className="space-y-4">
             <Link
               to="/admin/dashboard"
@@ -33,6 +35,12 @@ const Admin: React.FC = () => {
               className="flex items-center text-lg font-medium text-gray-700 hover:text-teal-500 hover:bg-white p-3 rounded-md transition duration-300"
             >
               <FaClipboardList className="mr-3" /> Orders
+            </Link>
+            <Link
+              to="/admin/products"
+              className="flex items-center text-lg font-medium text-gray-700 hover:text-teal-500 hover:bg-white p-3 rounded-md transition duration-300"
+            >
+              <FaClipboardList className="mr-3" /> Product
             </Link>
           </div>
         </div>

@@ -9,6 +9,7 @@ import Dashboard from "./components/Users";
 import UserDetails from "./components/UserDetails";
 import UserOrdersPage from "./components/Orders";
 import Admin from "./components/Admin";
+import Products from "./components/Products";
 
 const App: React.FC = () => {
   const dispatch = useDispatch();
@@ -41,6 +42,7 @@ const App: React.FC = () => {
         <Route path="dashboard" element={<Dashboard />} />
         <Route path="orders" element={<UserOrdersPage />} />
         <Route path="user-details" element={<UserDetails />} />
+        <Route path="products" element={<Products />} />
       </Route>
     </Routes>
   );
