@@ -29,11 +29,7 @@ const App: React.FC = () => {
       <Route
         path="/"
         element={
-          isLoggedIn ? (
-            <Navigate to="/admin/dashboard" />
-          ) : (
-            <Navigate to="/login" />
-          )
+          isLoggedIn ? <Navigate to="/login" /> : <Navigate to="/login" />
         }
       />
       <Route path="/login" element={<Login />} />
